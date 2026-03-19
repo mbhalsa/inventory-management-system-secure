@@ -1,0 +1,210 @@
+-- =========================================
+-- Inventory Management System Database
+-- =========================================
+
+CREATE DATABASE IF NOT EXISTS inventory_management_system;
+USE inventory_management_system;
+
+-- Optional: drop tables if you want to recreate everything
+DROP TABLE IF EXISTS sale_items;
+DROP TABLE IF EXISTS sales;
+DROP TABLE IF EXISTS purchase_order_items;
+DROP TABLE IF EXISTS purchase_orders;
+DROP TABLE IF EXISTS inventory;
+DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS suppliers;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
+
+-- =========================================
+-- 1. Roles
+-- =========================================
+CREATE TABLE roles (
+    role_id INT AUTO_INCREMENT PRIMARY KEY,
+    role_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- =========================================
+-- 2. Users
+-- =========================================
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    role_id INT,
+    FOREIGN KEY (role_id) REFERENCES roles(role_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);
+
+-- =========================================
+-- 3. Products
+-- =========================================
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    category VARCHAR(100),
+    price DECIMAL(10,2) NOT NULL,
+    quantity_in_stock INT NOT NULL DEFAULT 0,
+    description TEXT
+);
+
+-- =========================================
+-- 4. Inventory
+-- =========================================
+CREATE TABLE inventory (
+    inventory_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL UNIQUE,
+    quantity INT NOT NULL DEFAULT 0,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+-- =========================================
+-- 5. Suppliers
+-- =========================================
+CREATE TABLE suppliers (
+    supplier_id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_name VARCHAR(100) NOT NULL,
+    contact_info VARCHAR(100),
+    address VARCHAR(255)
+);
+
+-- =========================================
+-- 6. Purchase Orders
+-- =========================================
+CREATE TABLE purchase_orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50) NOT NULL,
+    supplier_id INT NOT NULL,
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+-- =========================================
+-- 7. Purchase Order Items
+-- =========================================
+CREATE TABLE purchase_order_items (
+    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES purchase_orders(order_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+-- =========================================
+-- 8. Sales
+-- =========================================
+CREATE TABLE sales (
+    sale_id INT AUTO_INCREMENT PRIMARY KEY,
+    sale_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);
+
+-- =========================================
+-- 9. Sale Items
+-- =========================================
+CREATE TABLE sale_items (
+    sale_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    sale_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (sale_id) REFERENCES sales(sale_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+-- =========================================
+-- 10. Audit Logs
+-- =========================================
+CREATE TABLE audit_logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    action VARCHAR(100) NOT NULL,
+    action_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    performed_by VARCHAR(100),
+    details TEXT
+);
+
+-- =========================================
+-- Initial Data Inserts
+-- =========================================
+
+-- Roles
+INSERT INTO roles (role_name) VALUES
+('Store Manager'),
+('Cashier'),
+('Inventory Clerk');
+
+-- Users
+INSERT INTO users (full_name, email, password, is_verified, role_id) VALUES
+('Mohamed Abdulla', 'mohamed@example.com', '123456', TRUE, 1),
+('Cashier User', 'cashier@example.com', '123456', TRUE, 2),
+('Inventory User', 'inventory@example.com', '123456', FALSE, 3);
+
+-- Products
+INSERT INTO products (product_name, category, price, quantity_in_stock, description) VALUES
+('Laptop Dell', 'Electronics', 3500.00, 10, 'Dell business laptop'),
+('Wireless Mouse', 'Accessories', 80.00, 25, 'Optical wireless mouse'),
+('Keyboard', 'Accessories', 120.00, 15, 'Mechanical keyboard');
+
+-- Inventory
+INSERT INTO inventory (product_id, quantity) VALUES
+(1, 10),
+(2, 25),
+(3, 15);
+
+-- Suppliers
+INSERT INTO suppliers (supplier_name, contact_info, address) VALUES
+('Tech Supplies Qatar', '+974-55550001', 'Doha, Qatar'),
+('Office World', '+974-55550002', 'Lusail, Qatar');
+
+-- Purchase Orders
+INSERT INTO purchase_orders (status, supplier_id) VALUES
+('Pending', 1),
+('Completed', 2);
+
+-- Purchase Order Items
+INSERT INTO purchase_order_items (order_id, product_id, quantity, unit_price) VALUES
+(1, 1, 5, 3200.00),
+(1, 2, 10, 60.00),
+(2, 3, 8, 95.00);
+
+-- Sales
+INSERT INTO sales (total_amount, user_id) VALUES
+(3580.00, 2),
+(200.00, 2);
+
+-- Sale Items
+INSERT INTO sale_items (sale_id, product_id, quantity, unit_price) VALUES
+(1, 1, 1, 3500.00),
+(1, 2, 1, 80.00),
+(2, 3, 1, 120.00),
+(2, 2, 1, 80.00);
+
+-- Audit Logs
+INSERT INTO audit_logs (action, performed_by, details) VALUES
+('ADD_PRODUCT', 'Mohamed Abdulla', 'Added Laptop Dell product'),
+('UPDATE_PRODUCT', 'Mohamed Abdulla', 'Updated stock for Wireless Mouse'),
+('VIEW_INVENTORY', 'Mohamed Abdulla', 'Viewed inventory list');
