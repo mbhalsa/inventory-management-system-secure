@@ -12,17 +12,18 @@ public class RoleDAO {
 
     public ArrayList<Role> getAllRoles() {
         ArrayList<Role> roles = new ArrayList<>();
-        String sql = "SELECT * FROM roles";
+        String sql = "SELECT * FROM roles ORDER BY role_id";
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
-                roles.add(new Role(
+                Role role = new Role(
                         resultSet.getInt("role_id"),
                         resultSet.getString("role_name")
-                ));
+                );
+                roles.add(role);
             }
 
         } catch (Exception e) {
@@ -32,13 +33,13 @@ public class RoleDAO {
         return roles;
     }
 
-    public Role getRoleById(int roleId) {
-        String sql = "SELECT * FROM roles WHERE role_id = ?";
+    public Role getRoleByName(String roleName) {
+        String sql = "SELECT * FROM roles WHERE role_name = ?";
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setInt(1, roleId);
+            statement.setString(1, roleName);
             ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
@@ -49,7 +50,7 @@ public class RoleDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("Error getting role: " + e.getMessage());
+            System.out.println("Error getting role by name: " + e.getMessage());
         }
 
         return null;
