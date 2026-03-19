@@ -2,10 +2,13 @@ package ui;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import service.ProductService;
+import service.SessionManager;
 
 public class DeleteProductForm {
     private ProductService productService;
@@ -25,8 +28,20 @@ public class DeleteProductForm {
         Label messageLabel = new Label();
 
         deleteButton.setOnAction(e -> {
+            if (!SessionManager.isStoreManager()) {
+                messageLabel.setText("Access denied. Only Store Manager can delete products.");
+                return;
+            }
+
             try {
-                int productId = Integer.parseInt(idField.getText());
+                String idText = idField.getText().trim();
+
+                if (idText.isEmpty()) {
+                    messageLabel.setText("Product ID is required.");
+                    return;
+                }
+
+                int productId = Integer.parseInt(idText);
                 boolean deleted = productService.deleteProduct(productId);
 
                 if (deleted) {
@@ -36,6 +51,8 @@ public class DeleteProductForm {
                     messageLabel.setText("Product not found or could not be deleted.");
                 }
 
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("Product ID must be numeric.");
             } catch (Exception ex) {
                 messageLabel.setText("Invalid product ID.");
             }

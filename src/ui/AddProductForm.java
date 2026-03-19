@@ -2,11 +2,14 @@ package ui;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Product;
 import service.ProductService;
+import service.SessionManager;
 
 public class AddProductForm {
     private ProductService productService;
@@ -38,15 +41,38 @@ public class AddProductForm {
         Label messageLabel = new Label();
 
         addButton.setOnAction(e -> {
+            if (!SessionManager.isStoreManager()) {
+                messageLabel.setText("Access denied. Only Store Manager can add products.");
+                return;
+            }
+
             try {
-                String name = nameField.getText();
-                String category = categoryField.getText();
-                double price = Double.parseDouble(priceField.getText());
-                int quantity = Integer.parseInt(quantityField.getText());
-                String description = descriptionField.getText();
+                String name = nameField.getText().trim();
+                String category = categoryField.getText().trim();
+                String priceText = priceField.getText().trim();
+                String quantityText = quantityField.getText().trim();
+                String description = descriptionField.getText().trim();
+
+                if (name.isEmpty() || category.isEmpty() || priceText.isEmpty()
+                        || quantityText.isEmpty() || description.isEmpty()) {
+                    messageLabel.setText("All fields are required.");
+                    return;
+                }
+
+                double price = Double.parseDouble(priceText);
+                int quantity = Integer.parseInt(quantityText);
+
+                if (price <= 0) {
+                    messageLabel.setText("Price must be greater than 0.");
+                    return;
+                }
+
+                if (quantity < 0) {
+                    messageLabel.setText("Quantity cannot be negative.");
+                    return;
+                }
 
                 Product product = new Product(0, name, category, price, quantity, description);
-
                 boolean added = productService.addProduct(product);
 
                 if (added) {
@@ -60,6 +86,8 @@ public class AddProductForm {
                     messageLabel.setText("Failed to add product.");
                 }
 
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("Price and Quantity must be numeric.");
             } catch (Exception ex) {
                 messageLabel.setText("Invalid input.");
             }

@@ -1,5 +1,6 @@
 package service;
 
+import dao.AuditLogDAO;
 import dao.InventoryDAO;
 import dao.ProductDAO;
 import model.Product;
@@ -9,10 +10,12 @@ import java.util.ArrayList;
 public class ProductService {
     private ProductDAO productDAO;
     private InventoryDAO inventoryDAO;
+    private AuditLogDAO auditLogDAO;
 
     public ProductService() {
         productDAO = new ProductDAO();
         inventoryDAO = new InventoryDAO();
+        auditLogDAO = new AuditLogDAO();
     }
 
     public boolean addProduct(Product product) {
@@ -21,10 +24,19 @@ public class ProductService {
         if (added) {
             Product savedProduct = getLastInsertedProduct(product.getProductName());
             if (savedProduct != null) {
-                return inventoryDAO.insertInventoryRecord(
+                boolean inventoryAdded = inventoryDAO.insertInventoryRecord(
                         savedProduct.getProductId(),
                         product.getQuantityInStock()
                 );
+
+                if (inventoryAdded) {
+                    auditLogDAO.addLog(
+                            "ADD_PRODUCT",
+                            SessionManager.getCurrentUserName(),
+                            "Added product: " + product.getProductName()
+                    );
+                    return true;
+                }
             }
         }
 
@@ -35,17 +47,40 @@ public class ProductService {
         boolean updated = productDAO.updateProduct(product);
 
         if (updated) {
-            return inventoryDAO.updateInventoryQuantity(
+            boolean inventoryUpdated = inventoryDAO.updateInventoryQuantity(
                     product.getProductId(),
                     product.getQuantityInStock()
             );
+
+            if (inventoryUpdated) {
+                auditLogDAO.addLog(
+                        "UPDATE_PRODUCT",
+                        SessionManager.getCurrentUserName(),
+                        "Updated product ID: " + product.getProductId()
+                );
+                return true;
+            }
         }
 
         return false;
     }
 
     public boolean deleteProduct(int productId) {
-        return productDAO.deleteProduct(productId);
+        Product product = productDAO.getProductById(productId);
+        boolean deleted = productDAO.deleteProduct(productId);
+
+        if (deleted) {
+            String productInfo = (product != null) ? product.getProductName() : "ID " + productId;
+
+            auditLogDAO.addLog(
+                    "DELETE_PRODUCT",
+                    SessionManager.getCurrentUserName(),
+                    "Deleted product: " + productInfo
+            );
+            return true;
+        }
+
+        return false;
     }
 
     public Product getProductById(int productId) {

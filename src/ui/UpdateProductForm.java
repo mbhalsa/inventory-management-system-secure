@@ -2,11 +2,14 @@ package ui;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Product;
 import service.ProductService;
+import service.SessionManager;
 
 public class UpdateProductForm {
     private ProductService productService;
@@ -43,7 +46,14 @@ public class UpdateProductForm {
 
         loadButton.setOnAction(e -> {
             try {
-                int productId = Integer.parseInt(idField.getText());
+                String idText = idField.getText().trim();
+
+                if (idText.isEmpty()) {
+                    messageLabel.setText("Product ID is required.");
+                    return;
+                }
+
+                int productId = Integer.parseInt(idText);
                 Product product = productService.getProductById(productId);
 
                 if (product != null) {
@@ -57,22 +67,48 @@ public class UpdateProductForm {
                     messageLabel.setText("Product not found.");
                 }
 
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("Product ID must be numeric.");
             } catch (Exception ex) {
                 messageLabel.setText("Invalid product ID.");
             }
         });
 
         updateButton.setOnAction(e -> {
+            if (!SessionManager.isStoreManager()) {
+                messageLabel.setText("Access denied. Only Store Manager can update products.");
+                return;
+            }
+
             try {
-                int productId = Integer.parseInt(idField.getText());
-                String name = nameField.getText();
-                String category = categoryField.getText();
-                double price = Double.parseDouble(priceField.getText());
-                int quantity = Integer.parseInt(quantityField.getText());
-                String description = descriptionField.getText();
+                String idText = idField.getText().trim();
+                String name = nameField.getText().trim();
+                String category = categoryField.getText().trim();
+                String priceText = priceField.getText().trim();
+                String quantityText = quantityField.getText().trim();
+                String description = descriptionField.getText().trim();
+
+                if (idText.isEmpty() || name.isEmpty() || category.isEmpty()
+                        || priceText.isEmpty() || quantityText.isEmpty() || description.isEmpty()) {
+                    messageLabel.setText("All fields are required.");
+                    return;
+                }
+
+                int productId = Integer.parseInt(idText);
+                double price = Double.parseDouble(priceText);
+                int quantity = Integer.parseInt(quantityText);
+
+                if (price <= 0) {
+                    messageLabel.setText("Price must be greater than 0.");
+                    return;
+                }
+
+                if (quantity < 0) {
+                    messageLabel.setText("Quantity cannot be negative.");
+                    return;
+                }
 
                 Product product = new Product(productId, name, category, price, quantity, description);
-
                 boolean updated = productService.updateProduct(product);
 
                 if (updated) {
@@ -81,6 +117,8 @@ public class UpdateProductForm {
                     messageLabel.setText("Failed to update product.");
                 }
 
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("ID, Price and Quantity must be numeric.");
             } catch (Exception ex) {
                 messageLabel.setText("Invalid input.");
             }
