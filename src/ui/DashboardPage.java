@@ -28,6 +28,7 @@ public class DashboardPage {
         Button verifyEmailButton = new Button("Verify Email");
         Button resetPasswordButton = new Button("Reset Password");
         Button assignRoleButton = new Button("Assign Role");
+        Button manageSuppliersButton = new Button("Manage Suppliers");
         Button logoutButton = new Button("Logout");
 
         verifyEmailButton.setOnAction(e -> {
@@ -49,6 +50,16 @@ public class DashboardPage {
             }
         });
 
+        manageSuppliersButton.setOnAction(e -> {
+            if (SessionManager.isStoreManager()) {
+                SupplierManagementPage supplierManagementPage = new SupplierManagementPage(stage);
+                supplierManagementPage.show();
+            } else {
+                messageLabel.setText("Only Store Manager can access supplier management.");
+            }
+        });
+
+
         logoutButton.setOnAction(e -> {
             authService.logout();
             LoginPage loginPage = new LoginPage(stage);
@@ -65,11 +76,12 @@ public class DashboardPage {
                 verifyEmailButton,
                 resetPasswordButton,
                 assignRoleButton,
+                manageSuppliersButton,
                 logoutButton,
                 messageLabel
         );
 
-        Scene scene = new Scene(layout, 400, 350);
+        Scene scene = new Scene(layout, 420, 380);
         stage.setTitle("Dashboard");
         stage.setScene(scene);
         stage.show();
