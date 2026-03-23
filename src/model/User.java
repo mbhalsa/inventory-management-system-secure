@@ -7,6 +7,8 @@ public class User {
     private String email;
     private String password;
     private boolean isVerified;
+    private Role role;
+
 
     public User() {
     }
@@ -18,6 +20,16 @@ public class User {
         this.password = password;
         this.isVerified = isVerified;
     }
+
+    public User(int userId, String fullName, String email, String password, boolean isVerified, Role role) {
+        this.userId = userId;
+        this.fullName = fullName;
+        this.email = email;
+        this.password = password;
+        this.isVerified = isVerified;
+        this.role = role;
+    }
+
 
     public int getUserId() {
         return userId;
@@ -58,6 +70,10 @@ public class User {
     public void setVerified(boolean verified) {
         isVerified = verified;
     }
+
+    public Role getRole() { return role; }
+
+    public void setRole(Role role) {this.role = role; }
 
     public void register() {
         System.out.println("User registered successfully.");
