@@ -29,6 +29,7 @@ public class DashboardPage {
         Button resetPasswordButton = new Button("Reset Password");
         Button assignRoleButton = new Button("Assign Role");
         Button manageSuppliersButton = new Button("Manage Suppliers");
+        Button managePurchaseOrdersButton = new Button("Manage Purchase Orders");
         Button logoutButton = new Button("Logout");
 
         verifyEmailButton.setOnAction(e -> {
@@ -59,6 +60,15 @@ public class DashboardPage {
             }
         });
 
+        managePurchaseOrdersButton.setOnAction(e -> {
+            if (SessionManager.isStoreManager()) {
+                PurchaseOrderPage purchaseOrderPage = new PurchaseOrderPage(stage);
+                purchaseOrderPage.show();
+            } else {
+                messageLabel.setText("Only Store Manager can access purchase orders.");
+            }
+        });
+
 
         logoutButton.setOnAction(e -> {
             authService.logout();
@@ -77,11 +87,12 @@ public class DashboardPage {
                 resetPasswordButton,
                 assignRoleButton,
                 manageSuppliersButton,
+                managePurchaseOrdersButton,
                 logoutButton,
                 messageLabel
         );
 
-        Scene scene = new Scene(layout, 420, 380);
+        Scene scene = new Scene(layout, 440, 420);
         stage.setTitle("Dashboard");
         stage.setScene(scene);
         stage.show();
