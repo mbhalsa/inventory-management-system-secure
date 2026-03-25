@@ -30,6 +30,7 @@ public class DashboardPage {
         Button assignRoleButton = new Button("Assign Role");
         Button manageSuppliersButton = new Button("Manage Suppliers");
         Button managePurchaseOrdersButton = new Button("Manage Purchase Orders");
+        Button manageStockReceiptsButton = new Button("Stock Receiving");
         Button logoutButton = new Button("Logout");
 
         verifyEmailButton.setOnAction(e -> {
@@ -69,6 +70,15 @@ public class DashboardPage {
             }
         });
 
+        manageStockReceiptsButton.setOnAction(e -> {
+            if (SessionManager.isStoreManager()) {
+                StockReceiptPage stockReceiptPage = new StockReceiptPage(stage);
+                stockReceiptPage.show();
+            } else {
+                messageLabel.setText("Only Store Manager can access stock receiving.");
+            }
+        });
+
 
         logoutButton.setOnAction(e -> {
             authService.logout();
@@ -88,6 +98,7 @@ public class DashboardPage {
                 assignRoleButton,
                 manageSuppliersButton,
                 managePurchaseOrdersButton,
+                manageStockReceiptsButton,
                 logoutButton,
                 messageLabel
         );
