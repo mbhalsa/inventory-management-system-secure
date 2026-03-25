@@ -17,6 +17,14 @@ public class PurchaseOrderService {
     }
 
     public boolean createPurchaseOrder(PurchaseOrder order) {
+        if (order == null || order.getSupplier() == null || order.getSupplier().getSupplierId() <= 0) {
+            return false;
+        }
+
+        if (!ValidationService.isValidStatus(order.getStatus())) {
+            return false;
+        }
+
         boolean result = purchaseOrderDAO.createPurchaseOrder(order);
 
         if (result) {
@@ -27,13 +35,18 @@ public class PurchaseOrderService {
             );
         }
 
-        return result;}
+        return result;
+    }
 
     public ArrayList<PurchaseOrder> getAllOrders() {
         return purchaseOrderDAO.getAllOrders();
     }
 
     public boolean updateOrderStatus(int orderId, String status) {
+        if (orderId <= 0 || !ValidationService.isValidStatus(status)) {
+            return false;
+        }
+
         boolean result = purchaseOrderDAO.updateOrderStatus(orderId, status);
 
         if (result) {
@@ -48,6 +61,10 @@ public class PurchaseOrderService {
     }
 
     public boolean deleteOrder(int orderId) {
+        if (orderId <= 0) {
+            return false;
+        }
+
         boolean result = purchaseOrderDAO.deleteOrder(orderId);
 
         if (result) {

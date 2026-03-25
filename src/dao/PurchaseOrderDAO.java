@@ -29,6 +29,27 @@ public class PurchaseOrderDAO {
         }
     }
 
+    public boolean isDuplicateOrder(PurchaseOrder order) {
+        String sql = "SELECT order_id FROM purchase_orders WHERE supplier_id = ? AND DATE(order_date) = ? AND status = ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, order.getSupplier().getSupplierId());
+            statement.setDate(2, new java.sql.Date(order.getOrderDate().getTime()));
+            statement.setString(3, order.getStatus());
+
+            ResultSet resultSet = statement.executeQuery();
+            return resultSet.next();
+
+        } catch (Exception e) {
+            System.out.println("Error checking duplicate purchase order: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+
     public ArrayList<PurchaseOrder> getAllOrders() {
 
         ArrayList<PurchaseOrder> orders = new ArrayList<>();
