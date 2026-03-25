@@ -31,6 +31,7 @@ public class DashboardPage {
         Button manageSuppliersButton = new Button("Manage Suppliers");
         Button managePurchaseOrdersButton = new Button("Manage Purchase Orders");
         Button manageStockReceiptsButton = new Button("Stock Receiving");
+        Button salesRecordButton = new Button("Sales Records");
         Button logoutButton = new Button("Logout");
 
         verifyEmailButton.setOnAction(e -> {
@@ -79,6 +80,11 @@ public class DashboardPage {
             }
         });
 
+        salesRecordButton.setOnAction(e -> {
+            SalesRecordPage salesRecordPage = new SalesRecordPage(stage);
+            salesRecordPage.show();
+        });
+
 
         logoutButton.setOnAction(e -> {
             authService.logout();
@@ -99,6 +105,7 @@ public class DashboardPage {
                 manageSuppliersButton,
                 managePurchaseOrdersButton,
                 manageStockReceiptsButton,
+                salesRecordButton,
                 logoutButton,
                 messageLabel
         );
