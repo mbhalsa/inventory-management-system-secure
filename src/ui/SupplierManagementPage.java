@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 import model.Supplier;
 import service.SessionManager;
 import service.SupplierService;
+import service.ValidationService;
 
 import java.util.ArrayList;
 
@@ -96,8 +97,8 @@ public class SupplierManagementPage {
         try {
             String idText = idField.getText().trim();
 
-            if (idText.isEmpty()) {
-                messageLabel.setText("Please enter supplier ID.");
+            if (!ValidationService.isPositiveInteger(idText)) {
+                messageLabel.setText("Supplier ID must be a valid number.");
                 return;
             }
 
@@ -114,7 +115,7 @@ public class SupplierManagementPage {
             addressField.setText(supplier.getAddress());
             messageLabel.setText("Supplier loaded successfully.");
 
-        } catch (NumberFormatException ex) {
+        } catch (Exception ex) {
             messageLabel.setText("Supplier ID must be a number.");
         }
     }
@@ -129,8 +130,10 @@ public class SupplierManagementPage {
         String contact = contactField.getText().trim();
         String address = addressField.getText().trim();
 
-        if (name.isEmpty() || contact.isEmpty() || address.isEmpty()) {
-            messageLabel.setText("Please fill in all supplier fields.");
+        if (!ValidationService.isTextValid(name)
+                || !ValidationService.isTextValid(contact)
+                || !ValidationService.isTextValid(address)) {
+            messageLabel.setText("Please fill in valid supplier information.");
             return;
         }
 
@@ -158,8 +161,11 @@ public class SupplierManagementPage {
             String contact = contactField.getText().trim();
             String address = addressField.getText().trim();
 
-            if (idText.isEmpty() || name.isEmpty() || contact.isEmpty() || address.isEmpty()) {
-                messageLabel.setText("Please fill in all fields.");
+            if (!ValidationService.isPositiveInteger(idText)
+                    || !ValidationService.isTextValid(name)
+                    || !ValidationService.isTextValid(contact)
+                    || !ValidationService.isTextValid(address)) {
+                messageLabel.setText("Please fill in valid supplier information.");
                 return;
             }
 
@@ -176,7 +182,7 @@ public class SupplierManagementPage {
                 messageLabel.setText("Failed to update supplier.");
             }
 
-        } catch (NumberFormatException ex) {
+        } catch (Exception  ex) {
             messageLabel.setText("Supplier ID must be a number.");
         }
     }
@@ -190,8 +196,8 @@ public class SupplierManagementPage {
         try {
             String idText = idField.getText().trim();
 
-            if (idText.isEmpty()) {
-                messageLabel.setText("Please enter supplier ID.");
+            if (!ValidationService.isPositiveInteger(idText)) {
+                messageLabel.setText("Please enter a valid supplier ID.");
                 return;
             }
 
@@ -206,7 +212,7 @@ public class SupplierManagementPage {
                 messageLabel.setText("Failed to delete supplier.");
             }
 
-        } catch (NumberFormatException ex) {
+        } catch (Exception ex) {
             messageLabel.setText("Supplier ID must be a number.");
         }
     }

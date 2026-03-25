@@ -13,6 +13,8 @@ import model.PurchaseOrder;
 import model.Supplier;
 import service.PurchaseOrderService;
 import service.SessionManager;
+import service.ValidationService;
+
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -99,8 +101,8 @@ public class PurchaseOrderPage {
             String supplierIdText = supplierIdField.getText().trim();
             String status = statusField.getText().trim();
 
-            if (supplierIdText.isEmpty() || status.isEmpty()) {
-                messageLabel.setText("Please enter supplier ID and status.");
+            if (!ValidationService.isPositiveInteger(supplierIdText) || !ValidationService.isValidStatus(status)) {
+                messageLabel.setText("Please enter a valid supplier ID and status.");
                 return;
             }
 
@@ -123,7 +125,7 @@ public class PurchaseOrderPage {
                 messageLabel.setText("Failed to create purchase order.");
             }
 
-        } catch (NumberFormatException ex) {
+        } catch (Exception ex) {
             messageLabel.setText("Supplier ID must be a number.");
         }
     }
@@ -138,8 +140,8 @@ public class PurchaseOrderPage {
             String orderIdText = orderIdField.getText().trim();
             String status = statusField.getText().trim();
 
-            if (orderIdText.isEmpty() || status.isEmpty()) {
-                messageLabel.setText("Please enter order ID and new status.");
+            if (!ValidationService.isPositiveInteger(orderIdText) || !ValidationService.isValidStatus(status)) {
+                messageLabel.setText("Please enter a valid order ID and status.");
                 return;
             }
 
@@ -154,7 +156,7 @@ public class PurchaseOrderPage {
                 messageLabel.setText("Failed to update order status.");
             }
 
-        } catch (NumberFormatException ex) {
+        } catch (Exception ex) {
             messageLabel.setText("Order ID must be a number.");
         }
     }
@@ -168,8 +170,8 @@ public class PurchaseOrderPage {
         try {
             String orderIdText = orderIdField.getText().trim();
 
-            if (orderIdText.isEmpty()) {
-                messageLabel.setText("Please enter order ID.");
+            if (!ValidationService.isPositiveInteger(orderIdText)) {
+                messageLabel.setText("Please enter a valid order ID.");
                 return;
             }
 
@@ -184,7 +186,7 @@ public class PurchaseOrderPage {
                 messageLabel.setText("Failed to delete purchase order.");
             }
 
-        } catch (NumberFormatException ex) {
+        } catch (Exception ex) {
             messageLabel.setText("Order ID must be a number.");
         }
     }

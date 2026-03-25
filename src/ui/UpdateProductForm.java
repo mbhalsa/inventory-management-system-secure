@@ -10,6 +10,8 @@ import javafx.stage.Stage;
 import model.Product;
 import service.ProductService;
 import service.SessionManager;
+import service.ValidationService;
+
 
 public class UpdateProductForm {
     private ProductService productService;
@@ -48,8 +50,8 @@ public class UpdateProductForm {
             try {
                 String idText = idField.getText().trim();
 
-                if (idText.isEmpty()) {
-                    messageLabel.setText("Product ID is required.");
+                if (!ValidationService.isPositiveInteger(idText)) {
+                    messageLabel.setText("Product ID must be a valid number.");
                     return;
                 }
 
@@ -80,47 +82,33 @@ public class UpdateProductForm {
                 return;
             }
 
-            try {
-                String idText = idField.getText().trim();
-                String name = nameField.getText().trim();
-                String category = categoryField.getText().trim();
-                String priceText = priceField.getText().trim();
-                String quantityText = quantityField.getText().trim();
-                String description = descriptionField.getText().trim();
+            String idText = idField.getText().trim();
+            String name = nameField.getText().trim();
+            String category = categoryField.getText().trim();
+            String priceText = priceField.getText().trim();
+            String quantityText = quantityField.getText().trim();
+            String description = descriptionField.getText().trim();
 
-                if (idText.isEmpty() || name.isEmpty() || category.isEmpty()
-                        || priceText.isEmpty() || quantityText.isEmpty() || description.isEmpty()) {
-                    messageLabel.setText("All fields are required.");
-                    return;
-                }
+            if (!ValidationService.isPositiveInteger(idText)
+                    || !ValidationService.isTextValid(name)
+                    || !ValidationService.isTextValid(category)
+                    || !ValidationService.isPositiveDouble(priceText)
+                    || !ValidationService.isNonNegativeInteger(quantityText)
+                    || !ValidationService.isTextValid(description)) {
+                messageLabel.setText("Please enter valid product information.");
+                return;
+            }
 
                 int productId = Integer.parseInt(idText);
                 double price = Double.parseDouble(priceText);
                 int quantity = Integer.parseInt(quantityText);
-
-                if (price <= 0) {
-                    messageLabel.setText("Price must be greater than 0.");
-                    return;
-                }
-
-                if (quantity < 0) {
-                    messageLabel.setText("Quantity cannot be negative.");
-                    return;
-                }
-
                 Product product = new Product(productId, name, category, price, quantity, description);
                 boolean updated = productService.updateProduct(product);
 
-                if (updated) {
-                    messageLabel.setText("Product updated successfully.");
-                } else {
-                    messageLabel.setText("Failed to update product.");
-                }
-
-            } catch (NumberFormatException ex) {
-                messageLabel.setText("ID, Price and Quantity must be numeric.");
-            } catch (Exception ex) {
-                messageLabel.setText("Invalid input.");
+            if (updated) {
+                messageLabel.setText("Product updated successfully.");
+            } else {
+                messageLabel.setText("Failed to update product.");
             }
         });
 
@@ -143,3 +131,4 @@ public class UpdateProductForm {
         stage.show();
     }
 }
+

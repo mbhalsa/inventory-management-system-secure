@@ -10,6 +10,8 @@ import javafx.stage.Stage;
 import model.Product;
 import service.ProductService;
 import service.SessionManager;
+import service.ValidationService;
+
 
 public class AddProductForm {
     private ProductService productService;
@@ -45,51 +47,36 @@ public class AddProductForm {
                 messageLabel.setText("Access denied. Only Store Manager can add products.");
                 return;
             }
+            String name = nameField.getText().trim();
+            String category = categoryField.getText().trim();
+            String priceText = priceField.getText().trim();
+            String quantityText = quantityField.getText().trim();
+            String description = descriptionField.getText().trim();
 
-            try {
-                String name = nameField.getText().trim();
-                String category = categoryField.getText().trim();
-                String priceText = priceField.getText().trim();
-                String quantityText = quantityField.getText().trim();
-                String description = descriptionField.getText().trim();
+            if (!ValidationService.isTextValid(name)
+                    || !ValidationService.isTextValid(category)
+                    || !ValidationService.isPositiveDouble(priceText)
+                    || !ValidationService.isNonNegativeInteger(quantityText)
+                    || !ValidationService.isTextValid(description)) {
+                messageLabel.setText("Please enter valid product information.");
+                return;
+            }
 
-                if (name.isEmpty() || category.isEmpty() || priceText.isEmpty()
-                        || quantityText.isEmpty() || description.isEmpty()) {
-                    messageLabel.setText("All fields are required.");
-                    return;
-                }
+            double price = Double.parseDouble(priceText);
+            int quantity = Integer.parseInt(quantityText);
 
-                double price = Double.parseDouble(priceText);
-                int quantity = Integer.parseInt(quantityText);
+            Product product = new Product(0, name, category, price, quantity, description);
+            boolean added = productService.addProduct(product);
 
-                if (price <= 0) {
-                    messageLabel.setText("Price must be greater than 0.");
-                    return;
-                }
-
-                if (quantity < 0) {
-                    messageLabel.setText("Quantity cannot be negative.");
-                    return;
-                }
-
-                Product product = new Product(0, name, category, price, quantity, description);
-                boolean added = productService.addProduct(product);
-
-                if (added) {
-                    messageLabel.setText("Product added successfully.");
-                    nameField.clear();
-                    categoryField.clear();
-                    priceField.clear();
-                    quantityField.clear();
-                    descriptionField.clear();
-                } else {
-                    messageLabel.setText("Failed to add product.");
-                }
-
-            } catch (NumberFormatException ex) {
-                messageLabel.setText("Price and Quantity must be numeric.");
-            } catch (Exception ex) {
-                messageLabel.setText("Invalid input.");
+            if (added) {
+                messageLabel.setText("Product added successfully.");
+                nameField.clear();
+                categoryField.clear();
+                priceField.clear();
+                quantityField.clear();
+                descriptionField.clear();
+            } else {
+                messageLabel.setText("Failed to add product.");
             }
         });
 
@@ -109,3 +96,4 @@ public class AddProductForm {
         stage.show();
     }
 }
+
