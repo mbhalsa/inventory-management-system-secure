@@ -16,6 +16,8 @@ public class SaleDAO {
     public boolean recordSale(Sale sale) {
         String saleSql = "INSERT INTO sales (total_amount, user_id) VALUES (?, ?)";
         String itemSql = "INSERT INTO sale_items (sale_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)";
+        String stockSql = "UPDATE products SET quantity_in_stock = quantity_in_stock - ? WHERE product_id = ?";
+        String inventorySql = "UPDATE inventory SET quantity = quantity - ? WHERE product_id = ?";
 
         Connection connection = null;
 
@@ -55,6 +57,8 @@ public class SaleDAO {
             }
 
             PreparedStatement itemStatement = connection.prepareStatement(itemSql);
+            PreparedStatement stockStatement = connection.prepareStatement(stockSql);
+            PreparedStatement inventoryStatement = connection.prepareStatement(inventorySql);
 
             for (SaleItem item : sale.getItems()) {
                 itemStatement.setInt(1, saleId);
@@ -62,9 +66,21 @@ public class SaleDAO {
                 itemStatement.setInt(3, item.getQuantity());
                 itemStatement.setDouble(4, item.getUnitPrice());
                 itemStatement.addBatch();
+
+                stockStatement.setInt(1, item.getQuantity());
+                stockStatement.setInt(2, item.getProduct().getProductId());
+                stockStatement.addBatch();
+
+                inventoryStatement.setInt(1, item.getQuantity());
+                inventoryStatement.setInt(2, item.getProduct().getProductId());
+                inventoryStatement.addBatch();
+
             }
 
             itemStatement.executeBatch();
+            stockStatement.executeBatch();
+            inventoryStatement.executeBatch();
+
             connection.commit();
             return true;
 
