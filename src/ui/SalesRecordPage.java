@@ -1,4 +1,5 @@
 package ui;
+import dao.ProductDAO;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -8,10 +9,14 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import model.Product;
 import model.Sale;
+import model.SaleItem;
+
 import model.User;
 import service.SaleService;
 import service.SessionManager;
+import service.ValidationService;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,22 +25,29 @@ public class SalesRecordPage {
 
     private Stage stage;
     private SaleService saleService;
+    private ProductDAO productDAO;
     private ListView<String> salesListView;
-    private TextField totalAmountField;
+    private TextField productIdField;
+    private TextField quantityField;
+
     private Label messageLabel;
 
     public SalesRecordPage(Stage stage) {
         this.stage = stage;
         this.saleService = new SaleService();
+        this.productDAO = new ProductDAO();
+
     }
 
     public void show() {
 
         Label titleLabel = new Label("Sales Recording");
 
-        totalAmountField = new TextField();
-        totalAmountField.setPromptText("Total Amount");
+        productIdField = new TextField();
+        productIdField.setPromptText("Product ID");
 
+        quantityField = new TextField();
+        quantityField.setPromptText("Quantity");
         Button recordSaleButton = new Button("Record Sale");
         Button refreshButton = new Button("Refresh Sales");
         Button backButton = new Button("Back");
@@ -56,7 +68,8 @@ public class SalesRecordPage {
 
         layout.getChildren().addAll(
                 titleLabel,
-                totalAmountField,
+                productIdField,
+                quantityField,
                 recordSaleButton,
                 refreshButton,
                 backButton,
@@ -75,32 +88,46 @@ public class SalesRecordPage {
     private void recordSale() {
 
         try {
-            String amountText = totalAmountField.getText().trim();
+            String productIdText = productIdField.getText().trim();
+            String quantityText = quantityField.getText().trim();
 
-            if (amountText.isEmpty()) {
-                messageLabel.setText("Please enter total amount.");
+            if (!ValidationService.isPositiveInteger(productIdText)
+                    || !ValidationService.isPositiveInteger(quantityText)) {
+                messageLabel.setText("Please enter a valid product ID and quantity.");
                 return;
             }
 
-            double totalAmount = Double.parseDouble(amountText);
+            int productId = Integer.parseInt(productIdText);
+            int quantity = Integer.parseInt(quantityText);
+
+            Product product = productDAO.getProductById(productId);
+
+            if (product == null) {
+                messageLabel.setText("Product not found.");
+                return;
+            }
+
+            SaleItem item = new SaleItem(0, product, quantity, product.getPrice());
 
             User user = new User();
             user.setUserId(SessionManager.getCurrentUserId());
 
-            Sale sale = new Sale(0, new Date(), totalAmount, user);
+            Sale sale = new Sale(0, new Date(), 0, user);
+            sale.addItem(item);
 
             boolean result = saleService.recordSale(sale);
 
             if (result) {
                 messageLabel.setText("Sale recorded successfully.");
-                totalAmountField.clear();
+                productIdField.clear();
+                quantityField.clear();
                 refreshSales();
             } else {
-                messageLabel.setText("Failed to record sale.");
+                messageLabel.setText("Failed to record sale. Check stock or input.");
             }
 
-        } catch (NumberFormatException ex) {
-            messageLabel.setText("Total amount must be a number.");
+        } catch (Exception ex) {
+            messageLabel.setText("Error while recording sale.");
         }
     }
 
