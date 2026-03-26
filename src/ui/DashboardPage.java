@@ -28,6 +28,12 @@ public class DashboardPage {
         Button verifyEmailButton = new Button("Verify Email");
         Button resetPasswordButton = new Button("Reset Password");
         Button assignRoleButton = new Button("Assign Role");
+
+        Button addProductButton = new Button("Add Product");
+        Button updateProductButton = new Button("Update Product");
+        Button deleteProductButton = new Button("Delete Product");
+        Button viewInventoryButton = new Button("View Inventory");
+
         Button manageSuppliersButton = new Button("Manage Suppliers");
         Button managePurchaseOrdersButton = new Button("Manage Purchase Orders");
         Button manageStockReceiptsButton = new Button("Stock Receiving");
@@ -53,6 +59,39 @@ public class DashboardPage {
                 messageLabel.setText("Only admin can access role assignment.");
             }
         });
+
+        addProductButton.setOnAction(e -> {
+            if (SessionManager.isStoreManager()) {
+                AddProductForm addProductForm = new AddProductForm();
+                addProductForm.show();
+            } else {
+                messageLabel.setText("Only Store Manager can add products.");
+            }
+        });
+
+        updateProductButton.setOnAction(e -> {
+            if (SessionManager.isStoreManager()) {
+                UpdateProductForm updateProductForm = new UpdateProductForm();
+                updateProductForm.show();
+            } else {
+                messageLabel.setText("Only Store Manager can update products.");
+            }
+        });
+
+        deleteProductButton.setOnAction(e -> {
+            if (SessionManager.isStoreManager()) {
+                DeleteProductForm deleteProductForm = new DeleteProductForm();
+                deleteProductForm.show();
+            } else {
+                messageLabel.setText("Only Store Manager can delete products.");
+            }
+        });
+
+        viewInventoryButton.setOnAction(e -> {
+            InventoryView inventoryView = new InventoryView();
+            inventoryView.show();
+        });
+
 
         manageSuppliersButton.setOnAction(e -> {
             if (SessionManager.isStoreManager()) {
@@ -108,6 +147,10 @@ public class DashboardPage {
                 verifyEmailButton,
                 resetPasswordButton,
                 assignRoleButton,
+                addProductButton,
+                updateProductButton,
+                deleteProductButton,
+                viewInventoryButton,
                 manageSuppliersButton,
                 managePurchaseOrdersButton,
                 manageStockReceiptsButton,
