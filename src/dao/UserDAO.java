@@ -7,6 +7,7 @@ import model.User;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 
 public class UserDAO {
 
@@ -130,5 +131,74 @@ public class UserDAO {
             System.out.println("Error checking email: " + e.getMessage());
             return false;
         }
+    }
+    public void recordFailedLogin(String email) {
+        String selectSql = "SELECT failed_attempts FROM users WHERE email = ?";
+        String updateSql = "UPDATE users SET failed_attempts = ?, lock_until = ? WHERE email = ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement selectStmt = connection.prepareStatement(selectSql)) {
+
+            selectStmt.setString(1, email);
+            ResultSet rs = selectStmt.executeQuery();
+
+            if (rs.next()) {
+                int attempts = rs.getInt("failed_attempts") + 1;
+                Timestamp lockUntil = null;
+
+                if (attempts >= 5 && attempts < 7) {
+                    lockUntil = new Timestamp(System.currentTimeMillis() + 60_000);
+                } else if (attempts >= 7 && attempts < 9) {
+                    lockUntil = new Timestamp(System.currentTimeMillis() + 5 * 60_000);
+                } else if (attempts >= 9) {
+                    lockUntil = new Timestamp(System.currentTimeMillis() + 15 * 60_000);
+                }
+
+                try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                    updateStmt.setInt(1, attempts);
+                    updateStmt.setTimestamp(2, lockUntil);
+                    updateStmt.setString(3, email);
+                    updateStmt.executeUpdate();
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error recording failed login: " + e.getMessage());
+        }
+    }
+
+    public void resetFailedLogin(String email) {
+        String sql = "UPDATE users SET failed_attempts = 0, lock_until = NULL WHERE email = ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, email);
+            statement.executeUpdate();
+
+        } catch (Exception e) {
+            System.out.println("Error resetting failed login: " + e.getMessage());
+        }
+    }
+
+    public boolean isAccountLocked(String email) {
+        String sql = "SELECT lock_until FROM users WHERE email = ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, email);
+            ResultSet rs = statement.executeQuery();
+
+            if (rs.next()) {
+                Timestamp lockUntil = rs.getTimestamp("lock_until");
+                return lockUntil != null && lockUntil.after(new Timestamp(System.currentTimeMillis()));
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error checking account lock: " + e.getMessage());
+        }
+
+        return false;
     }
 }
