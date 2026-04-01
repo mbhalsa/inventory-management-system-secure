@@ -34,6 +34,8 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    failed_attempts INT NOT NULL DEFAULT 0,
+    lock_until DATETIME NULL,
     role_id INT,
     FOREIGN KEY (role_id) REFERENCES roles(role_id)
         ON UPDATE CASCADE
