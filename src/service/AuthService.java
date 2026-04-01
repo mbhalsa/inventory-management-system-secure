@@ -5,18 +5,14 @@ import dao.UserDAO;
 import model.User;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class AuthService {
     private UserDAO userDAO;
     private AuditLogDAO auditLogDAO;
-    private Map<String, Integer> loginAttempts;
 
     public AuthService() {
         userDAO = new UserDAO();
         auditLogDAO = new AuditLogDAO();
-        loginAttempts = new HashMap<>();
     }
 
     public boolean register(String fullName, String email, String password, int roleId) {
@@ -42,31 +38,34 @@ public class AuthService {
     }
 
     public boolean login(String email, String password) {
-        if (isLocked(email)) {
-            auditLogDAO.addLog("LOGIN_BLOCKED", email, "Too many failed login attempts");
+        User user = userDAO.getUserByEmail(email);
+
+        if (userDAO.isAccountLocked(email)) {
+            sleepBeforeFail();
+            auditLogDAO.addLog("LOGIN_BLOCKED", email, "Account temporarily locked");
             return false;
         }
 
-        User user = userDAO.getUserByEmail(email);
-
         if (user == null) {
-            increaseAttempts(email);
+            sleepBeforeFail();
             auditLogDAO.addLog("LOGIN_FAILED", email, "Invalid email or password");
             return false;
         }
 
         if (!BCrypt.checkpw(password, user.getPassword())) {
-            increaseAttempts(email);
+            userDAO.recordFailedLogin(email);
+            sleepBeforeFail();
             auditLogDAO.addLog("LOGIN_FAILED", email, "Invalid email or password");
             return false;
         }
 
         if (!user.isVerified()) {
+            sleepBeforeFail();
             auditLogDAO.addLog("LOGIN_FAILED", email, "Account not verified");
             return false;
         }
 
-        resetAttempts(email);
+        userDAO.resetFailedLogin(email);
 
         String roleName = user.getRole() != null ? user.getRole().getRoleName() : "No Role";
         SessionManager.login(user.getUserId(), user.getFullName(), user.getEmail(), roleName);
@@ -117,19 +116,11 @@ public class AuthService {
         return updated;
     }
 
-    private void increaseAttempts(String email) {
-        loginAttempts.put(email, loginAttempts.getOrDefault(email, 0) + 1);
-    }
-
-    private void resetAttempts(String email) {
-        loginAttempts.remove(email);
-    }
-
-    public boolean isLocked(String email) {
-        return loginAttempts.getOrDefault(email, 0) >= 3;
-    }
-
-    public int getAttempts(String email) {
-        return loginAttempts.getOrDefault(email, 0);
+    private void sleepBeforeFail() {
+        try {
+            Thread.sleep(800);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
